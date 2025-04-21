@@ -1,0 +1,183 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": {
+          "type": "grafana",
+          "uid": "-- Grafana --"
+        },
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 0,
+  "id": 104,
+  "links": [],
+  "panels": [
+    {
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "feg7a2mxzt728c"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "fieldMinMax": false
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 20,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
+      "id": 1,
+      "options": {
+        "baidu": {
+          "callback": "bmapReady",
+          "key": ""
+        },
+        "editor": {
+          "format": "auto"
+        },
+        "editorMode": "visual",
+        "gaode": {
+          "key": "",
+          "plugin": "AMap.Scale,AMap.ToolBar"
+        },
+        "getOption": "const series = context.panel.data.series.map((s) => {\n  const sData = s.fields.find((f) => f.type === 'number').values.buffer || s.fields.find((f) => f.type === 'number').values;\n  const sTime = s.fields.find((f) => f.type === 'time').values.buffer || s.fields.find((f) => f.type === 'time').values;\n  \n  return {\n    name: s.refId,\n    type: 'line',\n    showSymbol: false,\n    areaStyle: {\n      opacity: 0.1,\n    },\n    lineStyle: {\n      width: 1,\n    },\n    data: sData.map((d, i) => [sTime[i], d.toFixed(2)]),\n  };\n});\n\n/**\n * Enable Data Zoom by default\n */\nsetTimeout(() => context.panel.chart.dispatchAction({\n  type: 'takeGlobalCursor',\n  key: 'dataZoomSelect',\n  dataZoomSelectActive: true,\n}), 500);\n\n/**\n * Update Time Range on Zoom\n */\ncontext.panel.chart.on('datazoom', function (params) {\n  const startValue = params.batch[0]?.startValue;\n  const endValue = params.batch[0]?.endValue;\n  locationService.partial({ from: startValue, to: endValue });\n});\n\nreturn {\n  backgroundColor: 'transparent',\n  tooltip: {\n    trigger: 'axis',\n  },\n  legend: {\n    left: '0',\n    bottom: '0',\n    data: context.panel.data.series.map((s) => s.refId),\n    textStyle: {\n      color: 'rgba(128, 128, 128, .9)',\n    },\n  },\n  toolbox: {\n    feature: {\n      dataZoom: {\n        yAxisIndex: 'none',\n        icon: {\n          zoom: 'path://',\n          back: 'path://',\n        },\n      },\n      saveAsImage: {},\n    }\n  },\n  xAxis: {\n    type: 'time',\n  },\n  yAxis: {\n    type: 'value',\n    min: 'dataMin',\n  },\n  grid: {\n    left: '2%',\n    right: '2%',\n    top: '2%',\n    bottom: 24,\n    containLabel: true,\n  },\n  series,\n};",
+        "google": {
+          "callback": "gmapReady",
+          "key": ""
+        },
+        "map": "none",
+        "renderer": "canvas",
+        "themeEditor": {
+          "config": "{}",
+          "name": "default"
+        },
+        "visualEditor": {
+          "code": "const sourceData = context.editor.dataset.source || [];\nconsole.log(sourceData);\n\n// Extract headers and data\nconst headers = sourceData[0] || [];\nconst dataRows = sourceData.slice(1) || [];\n\n// Extract module IDs (X-axis categories)\nconst moduleIds = dataRows.map(row => row[0]);\n\n// Function to filter out zero values while keeping the structure intact\nconst filterZeroValues = (data) => data.map(value => (value > 0 ? value : \"-\"));\n\n// Extract ticket values for priorities and filter out zero values\nconst p1Data = filterZeroValues(dataRows.map(row => row[1]));\nconst p2Data = filterZeroValues(dataRows.map(row => row[2]));\nconst p3Data = filterZeroValues(dataRows.map(row => row[3]));\nconst p4Data = filterZeroValues(dataRows.map(row => row[4]));\nconst p5Data = filterZeroValues(dataRows.map(row => row[5]));\n\nconst engagementName = dataRows[0]?.[6] || '';\nconsole.log(\"Engagement Name:\", engagementName);\n\n// Find the max value among all priority data and add 3 for better spacing\nconst maxValue = Math.max(...[...p1Data, ...p2Data, ...p3Data, ...p4Data, ...p5Data].map(val => (val === \"-\" ? 0 : val)));\nconst yAxisMax = maxValue + 2;\n\n// Define priority levels and colors\nconst priorities = [\"P1\", \"P2\", \"P3\", \"P4\"];\n// const colors = [\"#F60087\", \"#F29523\", \"#5151D3\", \"#26BFC7\"];\nconst colors = [\"#C40000\", \"#FF2E2E\", \"#FF5C5C\", \"#FF9E9E\"]\n\n// FF9E9E   FF5C5C\nconst dataHeightFactor = Math.min(dataRows.length * 4, 30); // controls spacing based on row count\n\nlegendTop = 50 + dataHeightFactor;\ngridTop = 70 + dataHeightFactor;\n\n\nreturn {\n  backgroundColor: \"#000\", // Dark background\n  dataset: { source: sourceData },\n\n  graphic: {\n    elements: [\n      {\n        type: 'image',\n        style: {\n          image: 'https://raw.githubusercontent.com/Chirag9221/ImagesForGrafana/main/Final_AMS_logo.svg',\n          width: 220,\n          height: 85\n        },\n        // right: 35,\n        left: 'left',\n        // bottom: 10,\n        top: 10,\n        left: 15\n      },\n      {\n        type: 'image',\n        style: {\n          image: 'https://raw.githubusercontent.com/Chirag9221/ImagesForGrafana/main/SVG_White_Logo%20for%20Graph%201.svg',\n          width: 200,\n          height: 60,\n        },\n        // left: 15,\n        // top: 15,\n        right: 40,\n        bottom: 10,\n      },\n      {\n        type: 'text',\n        // left: 'right',\n        right: 40,\n        top: 21,\n        style: {\n          text: ` ${engagementName}`,\n          fontSize: 32,\n          fill: '#F595FE',\n          fontWeight: 'bold'\n        },\n      },\n    ]\n  },\n\n\n  title: {\n    text: '{main|Incidents in last 1 Hr}\\n{sub|By Process & Priority}',\n    left: 'center',\n    top: 20,\n    textStyle: {\n      rich: {\n        main: {\n          fontSize: 32,\n          fontWeight: 'bold',\n          color: '#FFFFFF',\n          lineHeight: 30, // This controls the gap after main title\n        },\n        sub: {\n          fontSize: 20,\n          fontWeight: 'normal',\n          color: '#FFFF',\n          lineHeight: 35\n        }\n      },\n      align: 'center'\n    }\n  },\n\n\n\n  tooltip: {\n    trigger: \"axis\",\n    backgroundColor: \"rgba(0,0,0,0.8)\",\n    borderRadius: 10,\n    textStyle: { color: \"#fff\", fontSize: 12 }\n  },\n\n  title: {\n    text: '{main|Incidents in last 1 Hr}\\n{sub|By Process & Priority}',\n    left: 'center',\n    top: 20,\n    textStyle: {\n      rich: {\n        main: {\n          fontSize: 32,\n          fontWeight: 'bold',\n          color: '#FFFFFF',\n          lineHeight: 30, // This controls the gap after main title\n        },\n        sub: {\n          fontSize: 20,\n          fontWeight: 'normal',\n          color: '#FFFF',\n          lineHeight: 35\n        }\n      },\n      align: 'center'\n    }\n  },\n\n  legend: {\n    orient: \"horizontal\",\n    left: 15,\n    top: \"12%\", // Push legend further down to clear the title area\n    itemGap: 20,\n    textStyle: {\n      fontSize: 25,\n      color: \"#C7C7CC\"\n    }\n  },\n\n  grid: {\n    top: \"22%\",  // push chart grid down to make space for title + legend\n    bottom: \"10%\",\n    left: \"3%\",\n    right: \"3%\",\n    containLabel: true\n  },\n\n\n  xAxis: {\n    type: \"category\",\n    data: moduleIds,\n    axisLine: { lineStyle: { color: \"#48484B\" } },\n    axisLabel: { color: \"#FFFFFF\", fontSize: 15 },\n    name: \"Processes\",  // X-axis name\n    nameLocation: \"center\",  // Center the name\n    nameGap: 35,\n    nameTextStyle: {\n      color: \"#C7C7CC\",\n      fontSize: 20,\n      fontWeight: 'bold',\n      padding: [10, 0, 0, 0]\n    },\n  },\n\n  yAxis: {\n    type: \"value\",\n    max: yAxisMax,\n    axisLine: { lineStyle: { color: \"#48484B\" } },\n    axisLabel: { color: \"#FFFFFF\", fontSize: 13 },\n    splitLine: { show: true, lineStyle: { color: \"#48484B\" } }\n  },\n\n\n  series: priorities.map((name, index) => ({\n    name,\n    type: \"bar\",\n    data: [p1Data, p2Data, p3Data, p4Data, p5Data][index],\n    color: colors[index],\n    barGap: \"10%\",\n    barCategoryGap: \"40%\",\n    itemStyle: { barBorderRadius: [4, 4, 0, 0] },\n    label: { show: true, position: \"top\", color: \"#ffffff\", fontSize: 15 },\n\n    // Keep same animation style but fit everything in 15s\n    animationDuration: 2500, // Slightly shorter for overlap and smoother feel\n    animationEasing: \"cubicOut\",\n    animationDelay: () => index * 3000 // 0ms, 3000ms, 6000ms, 9000ms, 12000ms\n  }))\n\n};\n",
+          "dataset": [
+            {
+              "name": "process_name",
+              "source": "A"
+            },
+            {
+              "name": "p1",
+              "source": "A"
+            },
+            {
+              "name": "p2",
+              "source": "A"
+            },
+            {
+              "name": "p3",
+              "source": "A"
+            },
+            {
+              "name": "p4",
+              "source": "A"
+            },
+            {
+              "name": "p5",
+              "source": "A"
+            },
+            {
+              "name": "engagement_name",
+              "source": "B"
+            }
+          ],
+          "series": []
+        }
+      },
+      "pluginVersion": "6.6.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "feg7a2mxzt728c"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT \r\n\tprocess_name,\r\n\tseq_nbr,\r\n\tSUM(CASE WHEN PRIORITY = 'P1' THEN COUNT ELSE 0 END) as P1,\r\n\tSUM(CASE WHEN PRIORITY = 'P2' THEN COUNT ELSE 0 END) AS P2,\r\n\tSUM(CASE WHEN PRIORITY = 'P3' THEN COUNT ELSE 0 END) AS P3,\r\n\tSUM(CASE WHEN PRIORITY = 'P4' OR PRIORITY = 'P5'  THEN COUNT ELSE 0 END) AS P4\r\nFROM\r\n\tam_dashboards.t1\r\n\r\nwhere \r\n\tengagement_id = 9999 and dashboard_nbr = 1 and process_name is not null\r\ngroup by \r\n\tprocess_name,seq_nbr\r\norder by \r\n\tseq_nbr;",
+          "refId": "A",
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          }
+        },
+        {
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "feg7a2mxzt728c"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "hide": false,
+          "rawQuery": true,
+          "rawSql": "select distinct engagement_name from am_dashboards.t1 where engagement_id = 9999",
+          "refId": "B",
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          }
+        }
+      ],
+      "title": "",
+      "transparent": true,
+      "type": "volkovlabs-echarts-panel"
+    }
+  ],
+  "preload": false,
+  "refresh": "",
+  "schemaVersion": 40,
+  "tags": [],
+  "templating": {
+    "list": []
+  },
+  "time": {
+    "from": "now-6h",
+    "to": "now"
+  },
+  "timepicker": {},
+  "timezone": "browser",
+  "title": "Graph 1 - Incident Last 1 hour - P&P",
+  "uid": "bej9vheh1fc3ke",
+  "version": 6,
+  "weekStart": ""
+}
